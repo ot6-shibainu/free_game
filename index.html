@@ -23,25 +23,24 @@ const GAME_CONFIG_V2 = {
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;font-family:Arial,"Yu Gothic",Meiryo,sans-serif}
 body{display:flex;align-items:center;justify-content:center}
-.stage{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-.device{position:relative;width:min(430px,48vw);height:min(860px,94vh);padding:12px;background:linear-gradient(145deg,#29343e,#070a0e 55%,#1d2730);border:2px solid #56636e;border-radius:54px;box-shadow:0 18px 45px rgba(0,0,0,.35),inset 0 0 0 2px #000}
-.phone{position:relative;width:100%;height:100%;overflow:hidden;border-radius:42px;background:transparent}
-.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;user-select:none;z-index:0}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;font-family:Arial,"Yu Gothic",Meiryo,sans-serif}
+body{touch-action:none}
+.stage{position:relative;width:100vw;height:100vh;background:transparent}
+.device{position:relative;width:100%;height:100%;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none}
+.phone{position:relative;width:100%;height:100%;overflow:hidden;border-radius:0;background:transparent}
 canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;touch-action:none;background:transparent}
-.title{position:absolute;left:50%;top:28px;transform:translateX(-50%);z-index:4;color:#fff;font-size:16px;font-weight:700;white-space:nowrap;text-shadow:0 1px 3px #00528b;pointer-events:none}
-.score{position:absolute;right:17px;top:52px;z-index:4;color:#fff;font-size:21px;font-weight:800;letter-spacing:1px;text-shadow:0 1px 3px #00528b;pointer-events:none}
-.outs{position:absolute;left:16px;top:52px;z-index:4;color:#ef2638;font-size:25px;font-weight:900;letter-spacing:3px;text-shadow:0 1px 2px #fff;pointer-events:none}
-.game-btn{position:absolute;bottom:18px;height:58px;z-index:6;border:2px solid #fff;border-radius:30px;color:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.title{position:absolute;left:50%;top:18px;transform:translateX(-50%);z-index:4;color:#fff;font-size:16px;font-weight:700;white-space:nowrap;text-shadow:0 1px 3px #00528b;pointer-events:none}
+.score{position:absolute;right:17px;top:42px;z-index:4;color:#fff;font-size:21px;font-weight:800;letter-spacing:1px;text-shadow:0 1px 3px #00528b;pointer-events:none}
+.outs{position:absolute;left:16px;top:42px;z-index:4;color:#ef2638;font-size:25px;font-weight:900;letter-spacing:3px;text-shadow:0 1px 2px #fff;pointer-events:none}
+.game-btn{position:absolute;bottom:18px;height:58px;z-index:6;border:2px solid #fff;border-radius:30px;color:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.25);touch-action:manipulation}
 .pause{left:10px;width:120px;background:#126de4}
 .quit{right:10px;width:64px;background:#ed2537;font-size:30px}
-.message{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(0,40,80,.18)}
+.message{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.08)}
 .message-card{width:78%;padding:22px 18px;border-radius:22px;background:rgba(255,255,255,.96);text-align:center;box-shadow:0 8px 25px rgba(0,0,0,.25)}
 #messageTitle{font-size:24px;font-weight:800;color:#0878ce;margin-bottom:10px}
 #messageText{font-size:15px;line-height:1.55;color:#234;white-space:pre-line}
 #start{margin-top:15px;border:0;border-radius:22px;padding:10px 28px;background:#1685e9;color:#fff;font-weight:800;font-size:17px;cursor:pointer}
-.speaker{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:78px;height:5px;border-radius:4px;background:#05070a;z-index:20}
-.camera{position:absolute;top:5px;left:calc(50% + 50px);width:8px;height:8px;border-radius:50%;background:#111b24;border:1px solid #65727d;z-index:20}
-@media(max-width:700px){.device{width:min(430px,94vw);height:min(860px,94vh)}}
+@media(max-width:700px){.stage{width:100vw;height:100vh}}
 
 .ufo{position:absolute;left:0;top:0;z-index:3;display:none;width:68px;height:24px;font-size:24px;line-height:24px;text-align:center;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));}
 #level{position:absolute;left:16px;top:82px;z-index:4;color:#fff;font-size:16px;font-weight:800;text-shadow:0 1px 3px #00528b;pointer-events:none;}
@@ -50,9 +49,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;touch-action:n
 <body>
 <div class="stage">
  <div class="device">
-  <div class="speaker"></div><div class="camera"></div>
   <div id="phone" class="phone">
-   <img class="bg" src="game_background.png" alt="スマートフォン画面背景">
    <canvas id="game" width="520" height="1020"></canvas>
    <div class="title">一人壁打ちテニス</div>
    <div id="score" class="score">00000</div>
