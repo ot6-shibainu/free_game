@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>一人壁打ちテニス</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e9f3f8;font-family:Arial,"Yu Gothic",Meiryo,sans-serif}
+body{display:flex;align-items:center;justify-content:center}
+.stage{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.device{position:relative;width:min(430px,48vw);height:min(860px,94vh);padding:12px;background:linear-gradient(145deg,#29343e,#070a0e 55%,#1d2730);border:2px solid #56636e;border-radius:54px;box-shadow:0 18px 45px rgba(0,0,0,.35),inset 0 0 0 2px #000}
+.phone{position:relative;width:100%;height:100%;overflow:hidden;border-radius:42px;background:transparent}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;user-select:none}
+canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;touch-action:none;background:transparent}
+.title{position:absolute;left:50%;top:28px;transform:translateX(-50%);z-index:4;color:#fff;font-size:16px;font-weight:700;white-space:nowrap;text-shadow:0 1px 3px #00528b;pointer-events:none}
+.score{position:absolute;right:17px;top:52px;z-index:4;color:#fff;font-size:21px;font-weight:800;letter-spacing:1px;text-shadow:0 1px 3px #00528b;pointer-events:none}
+.outs{position:absolute;left:16px;top:52px;z-index:4;color:#ef2638;font-size:25px;font-weight:900;letter-spacing:3px;text-shadow:0 1px 2px #fff;pointer-events:none}
+.game-btn{position:absolute;bottom:18px;height:58px;z-index:6;border:2px solid #fff;border-radius:30px;color:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.pause{left:10px;width:120px;background:#126de4}
+.quit{right:10px;width:64px;background:#ed2537;font-size:30px}
+.message{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(0,40,80,.18)}
+.message-card{width:78%;padding:22px 18px;border-radius:22px;background:rgba(255,255,255,.96);text-align:center;box-shadow:0 8px 25px rgba(0,0,0,.25)}
+#messageTitle{font-size:24px;font-weight:800;color:#0878ce;margin-bottom:10px}
+#messageText{font-size:15px;line-height:1.55;color:#234;white-space:pre-line}
+#start{margin-top:15px;border:0;border-radius:22px;padding:10px 28px;background:#1685e9;color:#fff;font-weight:800;font-size:17px;cursor:pointer}
+.speaker{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:78px;height:5px;border-radius:4px;background:#05070a;z-index:20}
+.camera{position:absolute;top:5px;left:calc(50% + 50px);width:8px;height:8px;border-radius:50%;background:#111b24;border:1px solid #65727d;z-index:20}
+@media(max-width:700px){.device{width:min(430px,94vw);height:min(860px,94vh)}}
+</style>
+</head>
+<body>
+<div class="stage">
+ <div class="device">
+  <div class="speaker"></div><div class="camera"></div>
+  <div id="phone" class="phone">
+   <canvas id="game" width="520" height="1020"></canvas>
+   <div class="title">一人壁打ちテニス</div>
+   <div id="score" class="score">00000</div>
+   <div id="outs" class="outs" aria-label="アウト数"></div>
+   <button id="pause" class="game-btn pause">一時停止</button>
+   <button id="quit" class="game-btn quit" aria-label="ゲームを終了">×</button>
+   <div id="message" class="message">
+    <div class="message-card">
+     <div id="messageTitle">一人壁打ちテニス</div>
+     <div id="messageText">マウスポインターを左右に動かしてラケットを操作します。</div>
+     <button id="start">ゲーム開始</button>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+<script>
+(()=>{
+const c=document.getElementById('game'),x=c.getContext('2d');
+const W=c.width,H=c.height;
+// ゲームフィールドはスマートフォン画面そのもの。左右・上は画面限界まで使用し、下だけアウト。
+// ラケットは一時停止・終了ボタンの直上に8pxの隙間で配置し、左右は画面全幅を移動可能。
+const FIELD={left:0,right:W,top:0,bottom:H};
+const BUTTON_BOTTOM=18;
+const BUTTON_H=58;
+const R={w:W/5,h:20,y:H-BUTTON_BOTTOM-BUTTON_H-8-20-20-12};
+let racketX=(W-R.w)/2,hits=0,outs=0,state='ready',raf=0,last=0;
+let ball={x:W/2,y:R.y-30,vx:2.0,vy:-5.2,r:13};
+const score=document.getElementById('score'),outEl=document.getElementById('outs'),msg=document.getElementById('message'),mt=document.getElementById('messageTitle'),mx=document.getElementById('messageText'),start=document.getElementById('start'),pause=document.getElementById('pause'),quit=document.getElementById('quit');
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function pointer(clientX){const q=c.getBoundingClientRect();const px=(clientX-q.left)*W/q.width;racketX=clamp(px-R.w/2,0,W-R.w)}
+function resetBall(){const a=(Math.random()<.5?-1:1)*(0.22+Math.random()*.35);const s=5.2+(hits/10)*0.0166667;ball.x=racketX+R.w/2;ball.y=R.y-30;ball.vx=Math.sin(a)*s;ball.vy=-Math.cos(a)*s}
+function updateScore(){score.textContent=String(hits).padStart(5,'0');outEl.textContent='×'.repeat(outs)}
+function draw(){
+ x.clearRect(0,0,W,H);
+ const g=x.createLinearGradient(racketX,R.y,racketX,R.y+R.h);g.addColorStop(0,'#6be0ff');g.addColorStop(.5,'#168cff');g.addColorStop(1,'#0648c7');x.fillStyle=g;x.beginPath();x.roundRect(racketX,R.y,R.w,R.h,10);x.fill();x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=2;x.stroke();
+ const b=x.createRadialGradient(ball.x-5,ball.y-6,2,ball.x,ball.y,ball.r);b.addColorStop(0,'#fffde0');b.addColorStop(.45,'#fff400');b.addColorStop(1,'#e4bf00');x.fillStyle=b;x.beginPath();x.arc(ball.x,ball.y,ball.r,0,Math.PI*2);x.fill();x.strokeStyle='rgba(255,255,255,.9)';x.stroke()
+}
+function hit(){hits++;updateScore();let s=Math.hypot(ball.vx,ball.vy),a=Math.atan2(ball.vx,-ball.vy)+(Math.random()-.5)*.18;a=clamp(a,-1.12,1.12);ball.vx=Math.sin(a)*s;ball.vy=-Math.abs(Math.cos(a)*s)}
+function out(){outs++;updateScore();if(outs>=3){state='over';mt.textContent='GAME OVER';mx.textContent='落下球が3球になりました。\n打ち返した球数：'+hits+'球';start.textContent='もう一度';msg.style.display='flex';return}resetBall()}
+function loop(t){
+ if(state!=='playing'){last=t;draw();raf=requestAnimationFrame(loop);return}
+ let dt=Math.min(2,(t-last)/16.666||1);last=t;ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
+ if(ball.x-ball.r<=FIELD.left){ball.x=FIELD.left+ball.r;ball.vx=Math.abs(ball.vx)}
+ if(ball.x+ball.r>=FIELD.right){ball.x=FIELD.right-ball.r;ball.vx=-Math.abs(ball.vx)}
+ if(ball.y-ball.r<=FIELD.top){ball.y=FIELD.top+ball.r;ball.vy=Math.abs(ball.vy)}
+ if(ball.vy>0&&ball.y+ball.r>=R.y&&ball.y-ball.r<=R.y+R.h&&ball.x>=racketX&&ball.x<=racketX+R.w){ball.y=R.y-ball.r;hit()}
+ if(ball.y-ball.r>FIELD.bottom)out();
+ draw();raf=requestAnimationFrame(loop)
+}
+c.addEventListener('mousemove',e=>{if(state==='playing')pointer(e.clientX)});
+c.addEventListener('pointermove',e=>{if(state==='playing')pointer(e.clientX)});
+c.addEventListener('touchmove',e=>{if(state==='playing'){e.preventDefault();if(e.touches[0])pointer(e.touches[0].clientX)}},{passive:false});
+start.addEventListener('click',()=>{hits=0;outs=0;updateScore();state='playing';msg.style.display='none';start.textContent='ゲーム開始';resetBall()});
+pause.addEventListener('click',e=>{e.stopPropagation();if(state==='playing'){state='paused';pause.textContent='再開'}else if(state==='paused'){state='playing';pause.textContent='一時停止'}});
+quit.addEventListener('click',e=>{e.stopPropagation();state='ended';pause.textContent='一時停止';mx.textContent='ゲームを終了しました。';start.textContent='閉じる';msg.style.display='flex'; try{window.close()}catch(_){} });
+updateScore();draw();requestAnimationFrame(loop);
+})();
+</script>
+</body></html>
